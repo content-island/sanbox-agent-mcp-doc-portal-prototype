@@ -1,0 +1,83 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getFolderBySlug, getItemBySlug } from '../../lib/content-island';
+import { parseMarkdown } from '../../utils/markdown';
+import type { NavigationFolder } from '../../lib/content-island';
+import type { Item, Folder } from '../../types/content';
+
+export async function getStaticPaths() {
+  const { getNavigationStructure } = await import('../../lib/content-island');
+  
+  try {
+    const navigationData = await getNavigationStructure();
+    
+    const paths: Array<{
+      params: { folder: string; item: string };
+      props: { folderData: NavigationFolder; itemData: Item };
+    }> = [];
+    
+    for (const folder of navigationData.folders) {
+      for (const item of folder.items) {
+        paths.push({
+          params: { 
+            folder: folder.slug, 
+            item: item.slug 
+          },
+          props: {
+            folderData: folder,
+            itemData: item
+          }
+        });
+      }
+    }
+    
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths:', error);
+    return [];
+  }
+}
+
+const { folder: folderSlug, item: itemSlug } = Astro.params;
+const { folderData, itemData } = Astro.props;
+
+// Fallback: fetch data if not provided (for dev mode)
+let currentFolder: Folder | NavigationFolder | null = folderData;
+let currentItem: Item | null = itemData;
+
+if (!currentFolder) {
+  currentFolder = await getFolderBySlug(folderSlug!);
+}
+
+if (!currentItem) {
+  currentItem = await getItemBySlug(itemSlug!);
+}
+
+if (!currentFolder || !currentItem) {
+  return Astro.redirect('/404');
+}
+
+const htmlContent = currentItem.content ? parseMarkdown(currentItem.content) : '';
+---
+
+<Layout 
+  title={currentItem.title}
+  description={currentItem.description}
+  selectedFolderSlug={folderSlug}
+  selectedItemSlug={itemSlug}
+>
+  <div class="content-header">
+    <h1 class="content-title">{currentItem.title}</h1>
+    {currentItem.description && (
+      <p class="content-description">{currentItem.description}</p>
+    )}
+  </div>
+
+  {currentItem.content ? (
+    <div class="markdown-content" set:html={htmlContent} />
+  ) : (
+    <div class="markdown-content">
+      <p>No content available for this page.</p>
+    </div>
+  )}
+</Layout>

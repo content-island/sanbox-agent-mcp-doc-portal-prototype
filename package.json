@@ -9,6 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.13.3"
+    "@content-island/api-client": "^0.8.3",
+    "astro": "^5.13.3",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.2.0"
+  },
+  "devDependencies": {
+    "@types/marked": "^5.0.2"
   }
 }
