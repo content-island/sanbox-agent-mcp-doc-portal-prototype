@@ -14,9 +14,7 @@ pnpm-debug.log*
 
 
 # environment variables
-# Commented .env just for dev support, it's a sandbox
-# never do this on a real project
-# .env
+.env
 .env.production
 
 # macOS-specific files
